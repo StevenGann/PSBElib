@@ -1,0 +1,161 @@
+'''
+' P_S_B_E (Password_Seeded_Bit_Encryption), version 1.1
+'
+' (C)opyright 2004, Pure QB Innovations
+'
+'
+' Email any questions, comments, or beta results to...
+' ESmemberNEMESIS@aol.com
+'
+' Visit the Pure QB Innovations web site at...
+' http://members.aol.com/esmembernemesis/index.htm
+'
+' THIS PROGRAM MAY BE DISTRIBUTED FREELY AS PUBLIC DOMAIN SOFTWARE
+' AS LONG AS ANY PART OF THIS FILE IS NOT ALTERED IN ANY WAY.
+' IF YOU DO WISH TO USE THESE ROUTINES IN YOUR OWN PROGRAMS
+' THEN PLEASE GIVE CREDIT TO THE AUTHOR... Mario LaRosa.
+'
+'''
+'
+ON ERROR GOTO Event
+'
+DEFINT A-Z
+'
+SCREEN 0: WIDTH 80
+'
+GOSUB Title
+GOSUB Menu
+GOSUB File
+GOSUB Pass
+GOSUB Plant
+GOSUB Algorithm
+GOSUB Status
+'
+RUN
+'
+Title:
+CLS
+COLOR 8: LOCATE 25, 1: PRINT "( )opyright 2004,";
+COLOR 7: LOCATE 25, 2: PRINT "C";
+COLOR 4: LOCATE 25, 19: PRINT "Pure";
+COLOR 2: LOCATE 25, 24: PRINT "QB";
+COLOR 1: LOCATE 25, 27: PRINT "Innovations";
+COLOR 8: LOCATE 1, 25: PRINT "Password_Seeded_Bit_Encryption"
+COLOR 7: LOCATE 1, 25: PRINT "P"
+LOCATE 1, 34: PRINT "S"
+LOCATE 1, 41: PRINT "B"
+LOCATE 1, 45: PRINT "E"
+RETURN
+'
+Menu:
+COLOR 8
+PRINT : PRINT : PRINT
+PRINT "Please choose an option..."
+PRINT
+PRINT " ["; : COLOR 7: PRINT "D"; : COLOR 8: PRINT "]ecrypt file"
+PRINT " ["; : COLOR 7: PRINT "E"; : COLOR 8: PRINT "]ncrypt file"
+PRINT " ["; : COLOR 7: PRINT "Q"; : COLOR 8: PRINT "]uit PSBE"
+DO
+K$ = INKEY$
+SELECT CASE UCASE$(K$)
+CASE "E"
+Choice$ = "encrypt"
+EXIT DO
+CASE "D"
+Choice$ = "decrypt"
+EXIT DO
+CASE "Q"
+COLOR 7
+SYSTEM
+END SELECT
+LOOP
+RETURN
+'
+File:
+GOSUB Title
+COLOR 8
+PRINT : PRINT : PRINT "Enter the name (including the source path),"
+PRINT "of the file you wish to "; Choice$; "..."
+COLOR 7: PRINT : LINE INPUT " "; File$
+FileNum = FREEFILE
+OPEN File$ FOR BINARY AS FileNum
+LenFile& = LOF(FileNum)
+IF LenFile& = 0 THEN CLOSE FileNum: KILL File$: ERROR 53
+RETURN
+'
+Pass:
+COLOR 8
+PRINT : PRINT "Enter password to "; Choice$; " this file..."
+COLOR 7
+PRINT : LINE INPUT " "; Password$
+LenPassword = LEN(Password$)
+IF LenPassword < 1 THEN
+COLOR 4
+PRINT : PRINT "Password not legal."
+SLEEP 2
+RUN
+END IF
+RETURN
+'
+Plant:
+seed& = &H8000
+RANDOMIZE LenPassword
+FOR x = 1 TO LenPassword
+r = INT(RND(1) * LenPassword + 1)
+seed& = seed& + ASC(MID$(Password$, r, 1)) + (&H100 * (x - 1))
+NEXT
+RANDOMIZE seed&
+RETURN
+'
+Algorithm:
+COLOR 4: PRINT : PRINT "Are you sure?"
+COLOR 8: PRINT : PRINT " [ ]o or [ ]es";
+COLOR 15: LOCATE 15, 3: PRINT "N"
+LOCATE 15, 11: PRINT "Y"
+DO
+K$ = INKEY$
+SELECT CASE UCASE$(K$)
+CASE "Y"
+COLOR 2: PRINT : PRINT "..."; Choice$; "ing..."
+EXIT DO
+CASE "N"
+RUN
+END SELECT
+LOOP
+DIM b AS STRING * 1
+SELECT CASE Choice$
+CASE "encrypt"
+FOR i& = 1 TO LenFile&
+GET FileNum, i&, b
+r = INT(RND(1) * LenPassword + 1)
+f = ASC(MID$(Password$, r, 1))
+s = ASC(b)
+n = (f + s) AND 255
+b = CHR$(n)
+PUT FileNum, i&, b
+NEXT
+CASE "decrypt"
+FOR i& = 1 TO LenFile&
+GET FileNum, i&, b
+r = INT(RND(1) * LenPassword + 1)
+f = ASC(MID$(Password$, r, 1))
+s = ASC(b)
+n = (s - f) AND 255
+b = CHR$(n)
+PUT FileNum, i&, b
+NEXT
+END SELECT
+CLOSE FileNum
+RETURN
+'
+Status:
+COLOR 7
+PRINT : PRINT "File has been "; Choice$; "ed."
+SLEEP 2
+RETURN
+'
+Event:
+COLOR 4: PRINT : PRINT "File not found."
+SLEEP 2
+RUN
+'
