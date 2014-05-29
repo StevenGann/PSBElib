@@ -38,16 +38,56 @@ namespace PSBElib
         //and outputs an encrypted string.
         public static string Encrypt(string payload, string password)
         {
-            string result = "";
-            return result;
+            //Untested, but I think the QBasic integer and C# integer are different.
+            //Replaced most Ints with Int16, and b with a Char.
+            StringBuilder result = new StringBuilder();
+            Random RNG = new Random(plant(password));
+            int lenPassword = password.Length;
+            Int16 r = 0;
+            Int16 f = 0;
+            Int16 s = 0;
+            Int16 n = 0;
+            char b = ' ';
+
+            for (int i = 1; i <= lenPassword; i++)
+            {
+                b = payload[i - 1];
+                r = (Int16)(((float)RNG.Next(1000000) / (1000000.0f)) * lenPassword + 1);
+                f = (Int16)ASCMID(password, r);
+                s = (Int16)b;//Does this really work? Char to Int?
+                n = (Int16)((Int16)(f + s) & (Int16)255);
+                b = (char)n;
+                result[i - 1] = b;
+            }
+
+            return Convert.ToString(result);
         }
 
         //The other primary method of this library. Takes in a string and a
         //password and outputs a decrypted string.
         public static string Decrypt(string payload, string password)
         {
-            string result = "";
-            return result;
+            StringBuilder result = new StringBuilder();
+            Random RNG = new Random(plant(password));
+            int lenPassword = password.Length;
+            Int16 r = 0;
+            Int16 f = 0;
+            Int16 s = 0;
+            Int16 n = 0;
+            char b = ' ';
+
+            for (int i = 1; i <= lenPassword; i++)
+            {
+                b = payload[i - 1];
+                r = (Int16)(((float)RNG.Next(1000000) / (1000000.0f)) * lenPassword + 1);
+                f = (Int16)ASCMID(password, r);
+                s = (Int16)b;//Does this really work? Char to Int for ASCII?
+                n = (Int16)((Int16)(s - f) & (Int16)255);//<<<<Only difference from Encrypt
+                b = (char)n;
+                result[i - 1] = b;
+            }
+
+            return Convert.ToString(result);
         }
 
         //A simple checksum of random integers generated from a known seed.
@@ -77,7 +117,7 @@ namespace PSBElib
         //-------------------------------------------------
 
         //Processes the password string and returns a seed for the the RNG.
-        private int plant(string password)
+        private static int plant(string password)
         {
             int lenPassword = password.Length;
             int seed = 0x8000;
@@ -87,17 +127,20 @@ namespace PSBElib
             for (int x = 1; x <= lenPassword; x++)
             {
                 r = (int)(((float)RNG.Next(1000000)/(1000000.0f)) * lenPassword + 1);
-
-                //seed = seed + 
+                seed = seed + ASCMID(password, r) + (0x0100 * (x - 1));
             }
 
             return seed;
         }
 
         //C# implementation of the nested QBasic functions ASC(MID$())
-        private int ASCMID(string password, int r, int n)
+        private static int ASCMID(string password, int r)
         {
             int result = 0;
+
+            byte[] asciiBytes = Encoding.ASCII.GetBytes(password);
+
+            result = (int)asciiBytes[r - 1];
 
             return result;
         }

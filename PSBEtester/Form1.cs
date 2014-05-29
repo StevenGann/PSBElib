@@ -31,5 +31,10 @@ namespace PSBEtester
         {
             textBoxDiagResult.Text = Convert.ToString(PSBE.Diagnostic());
         }
+
+        private void buttonEncrypt_Click(object sender, EventArgs e)
+        {
+            textBoxEncrypted.Text = PSBE.Encrypt(textBoxUnencrypted.Text, "password");
+        }
     }
 }
